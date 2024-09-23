@@ -1,0 +1,12 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="256dp"
+    android:height="256dp"
+    android:viewportWidth="256"
+    android:viewportHeight="256">
+    <group>
+        <clip-path android:pathData="M0,0h256v256H0z" />
+        <path
+            android:fillColor="#333"
+            android:pathData="M138.01,223.35v-21.33h21.33v21.33zM116.68,202.01L116.68,148.68h21.33v53.33zM202.01,170.01v-42.67h21.33v42.67zM180.68,127.35v-21.33h21.33v21.33zM52.68,148.68v-21.33h21.33v21.33zM31.35,127.35v-21.33L52.68,106.01v21.33zM127.35,52.68L127.35,31.35h21.33L148.68,52.68zM47.35,79.35h32v-32h-32zM31.35,95.35v-64h64v64zM47.35,207.35h32v-32h-32zM31.35,223.35v-64h64v64zM175.35,79.35h32v-32h-32zM159.35,95.35v-64h64v64zM180.68,223.35v-32h-21.33v-21.33h42.67v32h21.33v21.33zM138.01,148.68v-21.33h42.67v21.33zM95.35,148.68v-21.33L74.01,127.35v-21.33h64v21.33L116.68,127.35v21.33zM106.01,95.35L106.01,52.68h21.33v21.33h21.33v21.33zM55.35,71.35v-16h16v16zM55.35,199.35v-16h16v16zM183.35,71.35v-16h16v16z" />
+    </group>
+</vector>

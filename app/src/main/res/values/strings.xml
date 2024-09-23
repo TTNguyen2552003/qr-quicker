@@ -1,3 +1,25 @@
 <resources>
     <string name="app_name">QR Quicker</string>
+
+    <string name="create_qr_screen_text_field_place_holder">Input the text</string>
+    <string name="create_qr_screen_result_place_holder_text">QR code will appear here</string>
+    <string name="create_qr_screen_save_button_label">Save</string>
+
+    <string name="scan_qr_screen_scanning_area_place_holder_text_without_permission">You need to allow the app to\naccess camera</string>
+    <string name="scan_qr_screen_request_permission_button_label">Allow</string>
+    <string name="scan_qr_screen_start_scanning_button_label">Scan</string>
+    <string name="scan_qr_screen_stop_scanning_button_label">Stop</string>
+    <string name="scan_qr_screen_text_field_place_holder">Your result here</string>
+    <string name="scan_qr_screen_option_1_description">Auto copy to clipboard</string>
+    <string name="scan_qr_screen_option_2_description">Auto open the web link</string>
+
+    <string name="load_image_screen_loading_image_area_place_holder_text_without_permission">You need to allow the app to access photos and media</string>
+    <string name="load_image_screen_request_permission_button_label">Allow</string>
+    <string name="load_image_screen_start_loading_button_label">Load</string>
+    <string name="load_image_screen_stop_loading_button_label">Unload</string>
+    <string name="load_image_screen_text_field_place_holder">Your result here</string>
+    <string name="load_image_screen_option_1_description">Auto copy to clipboard</string>
+    <string name="load_image_screen_option_2_description">Auto open the web link</string>
+
+    <string name="option_menu_title">Options</string>
 </resources>
