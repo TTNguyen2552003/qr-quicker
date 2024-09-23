@@ -13,13 +13,13 @@
     <string name="scan_qr_screen_option_1_description">Auto copy to clipboard</string>
     <string name="scan_qr_screen_option_2_description">Auto open the web link</string>
 
-    <string name="load_image_screen_loading_image_area_place_holder_text_without_permission">You need to allow the app to access photos and media</string>
-    <string name="load_image_screen_request_permission_button_label">Allow</string>
-    <string name="load_image_screen_start_loading_button_label">Load</string>
-    <string name="load_image_screen_stop_loading_button_label">Unload</string>
-    <string name="load_image_screen_text_field_place_holder">Your result here</string>
-    <string name="load_image_screen_option_1_description">Auto copy to clipboard</string>
-    <string name="load_image_screen_option_2_description">Auto open the web link</string>
+    <string name="decode_image_screen_loading_image_area_place_holder_text_without_permission">You need to allow the app to access photos and media</string>
+    <string name="decode_image_screen_request_permission_button_label">Allow</string>
+    <string name="decode_image_screen_start_loading_button_label">Load</string>
+    <string name="decode_image_screen_stop_loading_button_label">Unload</string>
+    <string name="decode_image_screen_text_field_place_holder">Your result here</string>
+    <string name="decode_image_screen_option_1_description">Auto copy to clipboard</string>
+    <string name="decode_image_screen_option_2_description">Auto open the web link</string>
 
     <string name="option_menu_title">Options</string>
 </resources>

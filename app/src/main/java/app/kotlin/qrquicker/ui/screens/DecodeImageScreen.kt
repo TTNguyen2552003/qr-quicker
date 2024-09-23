@@ -110,7 +110,7 @@ fun LoadImageScreen() {
                         )
 
                         Text(
-                            text = stringResource(id = R.string.load_image_screen_loading_image_area_place_holder_text_without_permission),
+                            text = stringResource(id = R.string.decode_image_screen_loading_image_area_place_holder_text_without_permission),
                             style = bodySmall.noScale(),
                             textAlign = TextAlign.Center,
                             color = onSurfaceColor
@@ -121,7 +121,7 @@ fun LoadImageScreen() {
                         data = Uri.fromParts("package", context.packageName, null)
                     }
                     Button(
-                        label = R.string.load_image_screen_request_permission_button_label,
+                        label = R.string.decode_image_screen_request_permission_button_label,
                         onPressEvent = { context.startActivity(intent) }
                     )
                 }
@@ -135,7 +135,7 @@ fun LoadImageScreen() {
                     )
 
                     Button(
-                        label = R.string.load_image_screen_start_loading_button_label,
+                        label = R.string.decode_image_screen_start_loading_button_label,
                         onPressEvent = { loadingImageAreaState = LoadingImageAreaState.ACTIVE }
                     )
                 }
@@ -152,18 +152,18 @@ fun LoadImageScreen() {
                     )
 
                     Button(
-                        label = R.string.load_image_screen_stop_loading_button_label,
+                        label = R.string.decode_image_screen_stop_loading_button_label,
                         onPressEvent = { loadingImageAreaState = LoadingImageAreaState.INACTIVE }
                     )
                 }
             }
         }
 
-        TextField(placeHolder = R.string.load_image_screen_text_field_place_holder)
+        TextField(placeHolder = R.string.decode_image_screen_text_field_place_holder)
 
         OptionMenu(
-            option1Description = R.string.load_image_screen_option_1_description,
-            option2Description = R.string.load_image_screen_option_2_description,
+            option1Description = R.string.decode_image_screen_option_1_description,
+            option2Description = R.string.decode_image_screen_option_2_description,
         )
     }
 }
