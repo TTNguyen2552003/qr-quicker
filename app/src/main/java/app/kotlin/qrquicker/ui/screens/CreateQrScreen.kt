@@ -39,7 +39,6 @@ fun CreateQrScreen() {
             .drawBehind {
                 drawRect(color = surfaceColor)
             }
-            .statusBarsPadding()
             .padding(all = gap600)
     ) {
         TextField(placeHolder = R.string.create_qr_screen_text_field_place_holder)

@@ -57,7 +57,6 @@ fun ScanQrScreen() {
             .drawBehind {
                 drawRect(color = surfaceColor)
             }
-            .statusBarsPadding()
             .padding(all = gap600),
         verticalArrangement = Arrangement.spacedBy(space = gap700),
         horizontalAlignment = Alignment.CenterHorizontally

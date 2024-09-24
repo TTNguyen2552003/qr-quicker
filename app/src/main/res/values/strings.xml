@@ -22,4 +22,8 @@
     <string name="decode_image_screen_option_2_description">Auto open the web link</string>
 
     <string name="option_menu_title">Options</string>
+
+    <string name="navigation_bar_item_label_1">Create</string>
+    <string name="navigation_bar_item_label_2">Scan</string>
+    <string name="navigation_bar_item_label_3">Load</string>
 </resources>

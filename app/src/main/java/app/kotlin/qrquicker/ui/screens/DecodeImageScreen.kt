@@ -53,14 +53,13 @@ enum class LoadingImageAreaState {
 }
 
 @Composable
-fun LoadImageScreen() {
+fun DecodeImageScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .drawBehind {
                 drawRect(color = surfaceColor)
             }
-            .statusBarsPadding()
             .padding(all = 24.dp),
         verticalArrangement = Arrangement.spacedBy(space = gap700),
         horizontalAlignment = Alignment.CenterHorizontally
