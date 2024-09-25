@@ -1,7 +1,7 @@
 package app.kotlin.qrquicker.ui.navigation
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.layout.Box
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,14 +12,20 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import app.kotlin.qrquicker.R
 import app.kotlin.qrquicker.ui.components.NavigationBar
 import app.kotlin.qrquicker.ui.components.NavigationBarItem
 import app.kotlin.qrquicker.ui.screens.CreateQrScreen
 import app.kotlin.qrquicker.ui.screens.DecodeImageScreen
 import app.kotlin.qrquicker.ui.screens.ScanQrScreen
-import app.kotlin.qrquicker.ui.styles.pushLeftTransition
-import app.kotlin.qrquicker.ui.styles.pushRightTransition
+import app.kotlin.qrquicker.ui.styles.slideInFromLeft
+import app.kotlin.qrquicker.ui.styles.slideInFromRight
+import app.kotlin.qrquicker.ui.styles.slideOutFromLeft
+import app.kotlin.qrquicker.ui.styles.slideOutFromRight
 
 enum class Destination(
     val route: String,
@@ -51,6 +57,33 @@ private val navigationBarItems: List<NavigationBarItem> = listOf(
     )
 )
 
+fun getEnterTransition(previousIndex: Int, selectedIndex: Int): EnterTransition {
+    return if (previousIndex < selectedIndex) {
+        slideInFromRight
+    } else {
+        slideInFromLeft
+    }
+}
+
+fun getExitTransition(previousIndex: Int, selectedIndex: Int): ExitTransition {
+    return if (previousIndex < selectedIndex) {
+        slideOutFromRight
+    } else {
+        slideOutFromLeft
+    }
+}
+
+private fun changeTab(
+    route: String,
+    navController: NavHostController,
+    updateIndices: () -> Unit
+) {
+    updateIndices()
+    navController.navigate(route) {
+        popUpTo(id = 0) { inclusive = true }
+    }
+}
+
 @Composable
 fun QrQuickerScreen() {
     Column(
@@ -58,44 +91,83 @@ fun QrQuickerScreen() {
             .fillMaxSize()
             .statusBarsPadding()
     ) {
+        val navController: NavHostController = rememberNavController()
         var selectedIndex: Int by remember {
             mutableIntStateOf(value = Destination.SCAN_QR.tabIndex)
         }
         var previousIndex: Int by remember {
             mutableIntStateOf(value = selectedIndex)
         }
-        Box(
+        NavHost(
+            navController = navController,
+            startDestination = Destination.SCAN_QR.route,
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(weight = 1f)
         ) {
-            AnimatedContent(
-                targetState = selectedIndex,
-                label = "navigation section",
-                transitionSpec = {
-                    if (previousIndex < selectedIndex)
-                        pushRightTransition
-                    else
-                        pushLeftTransition
+            composable(
+                route = Destination.CREATE_QR.route,
+                enterTransition = {
+                    getEnterTransition(
+                        previousIndex = previousIndex,
+                        selectedIndex = selectedIndex
+                    )
+                },
+                exitTransition = {
+                    getExitTransition(
+                        previousIndex = previousIndex,
+                        selectedIndex = selectedIndex
+                    )
                 }
-            ) { targetState ->
-                when (targetState) {
-                    Destination.CREATE_QR.tabIndex -> CreateQrScreen()
-                    Destination.SCAN_QR.tabIndex -> ScanQrScreen()
-                    Destination.DECODE_IMAGE.tabIndex -> DecodeImageScreen()
-                }
+            ) {
+                CreateQrScreen()
             }
-        }
-
-        val changeTab: (Int) -> Unit = { newIndex: Int ->
-            previousIndex = selectedIndex
-            selectedIndex = newIndex
+            composable(
+                route = Destination.SCAN_QR.route,
+                enterTransition = {
+                    getEnterTransition(
+                        previousIndex = previousIndex,
+                        selectedIndex = selectedIndex
+                    )
+                },
+                exitTransition = {
+                    getExitTransition(
+                        previousIndex = previousIndex,
+                        selectedIndex = selectedIndex
+                    )
+                }
+            ) {
+                ScanQrScreen()
+            }
+            composable(
+                route = Destination.DECODE_IMAGE.route,
+                enterTransition = {
+                    getEnterTransition(
+                        previousIndex = previousIndex,
+                        selectedIndex = selectedIndex
+                    )
+                },
+                exitTransition = {
+                    getExitTransition(
+                        previousIndex = previousIndex,
+                        selectedIndex = selectedIndex
+                    )
+                }
+            ) {
+                DecodeImageScreen()
+            }
         }
 
         NavigationBar(
             navigationBarItems = navigationBarItems,
             selectedIndex = selectedIndex,
-            onTabPressedEvent = changeTab
+            onTabPressedEvent = { newIndex, route ->
+                changeTab(route, navController) {
+                    previousIndex = selectedIndex
+                    selectedIndex = newIndex
+                }
+            }
         )
     }
 }
+

@@ -1,43 +1,40 @@
 package app.kotlin.qrquicker.ui.styles
 
-import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 
-const val TRANSITION_DURATION: Int = 300
+const val TRANSITION_DURATION: Int = 500
 
-val pushRightTransition: ContentTransform = slideInHorizontally(
+val slideInFromRight = slideInHorizontally(
+    initialOffsetX = { it },
     animationSpec = tween(
         durationMillis = TRANSITION_DURATION,
-        easing = EaseOut
-    ),
-    initialOffsetX = { it }
-).togetherWith(
-    slideOutHorizontally(
-        animationSpec = tween(
-            durationMillis = TRANSITION_DURATION,
-            easing = EaseOut
-        ),
-        targetOffsetX = { -it }
+        easing = LinearEasing
     )
 )
 
-val pushLeftTransition:ContentTransform = slideInHorizontally(
+val slideInFromLeft = slideInHorizontally(
+    initialOffsetX = { -it },
     animationSpec = tween(
-        durationMillis = 300,
+        durationMillis = TRANSITION_DURATION,
         easing = LinearEasing
-    ),
-    initialOffsetX = { -it }
-).togetherWith(
-    slideOutHorizontally(
-        animationSpec = tween(
-            durationMillis = 300,
-            easing = LinearEasing
-        ),
-        targetOffsetX = { it }
+    )
+)
+
+val slideOutFromRight = slideOutHorizontally(
+    targetOffsetX = { -it },
+    animationSpec = tween(
+        durationMillis = TRANSITION_DURATION,
+        easing = LinearEasing
+    )
+)
+
+val slideOutFromLeft = slideOutHorizontally(
+    targetOffsetX = { it },
+    animationSpec = tween(
+        durationMillis = TRANSITION_DURATION,
+        easing = LinearEasing
     )
 )
