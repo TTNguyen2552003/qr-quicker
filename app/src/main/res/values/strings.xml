@@ -26,4 +26,6 @@
     <string name="navigation_bar_item_label_1">Create</string>
     <string name="navigation_bar_item_label_2">Scan</string>
     <string name="navigation_bar_item_label_3">Load</string>
+
+    <string name="toast_message_auto_copy_to_clipboard_option">Text copied to clip board</string>
 </resources>

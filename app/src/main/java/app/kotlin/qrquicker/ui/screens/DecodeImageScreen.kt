@@ -4,11 +4,12 @@ import android.Manifest.permission.READ_EXTERNAL_STORAGE
 import android.Manifest.permission.READ_MEDIA_IMAGES
 import android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
-import android.provider.Settings
+import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,13 +17,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,7 +34,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import app.kotlin.qrquicker.R
+import app.kotlin.qrquicker.helpers.analyzeImage
+import app.kotlin.qrquicker.helpers.copyToClipBoard
+import app.kotlin.qrquicker.helpers.gotoAppSetting
+import app.kotlin.qrquicker.helpers.openWeblink
 import app.kotlin.qrquicker.ui.components.Button
 import app.kotlin.qrquicker.ui.components.OptionMenu
 import app.kotlin.qrquicker.ui.components.TextField
@@ -45,15 +49,18 @@ import app.kotlin.qrquicker.ui.styles.gap700
 import app.kotlin.qrquicker.ui.styles.noScale
 import app.kotlin.qrquicker.ui.styles.onSurfaceColor
 import app.kotlin.qrquicker.ui.styles.surfaceColor
-
-enum class LoadingImageAreaState {
-    NO_PHOTOS_AND_MEDIA_PERMISSION_ALLOWED,
-    INACTIVE,
-    ACTIVE
-}
+import app.kotlin.qrquicker.ui.viewmodels.DecodeImageUiState
+import app.kotlin.qrquicker.ui.viewmodels.DecodeImageViewModel
+import app.kotlin.qrquicker.ui.viewmodels.LoadingImageAreaState
+import coil.compose.rememberAsyncImagePainter
+import kotlinx.coroutines.launch
 
 @Composable
-fun DecodeImageScreen() {
+fun DecodeImageScreen(
+    decodeImageViewModel: DecodeImageViewModel = viewModel()
+) {
+    val decodeImageUiState: DecodeImageUiState by decodeImageViewModel.uiState.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -65,6 +72,23 @@ fun DecodeImageScreen() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         val context: Context = LocalContext.current
+        val loadImageLauncher: ManagedActivityResultLauncher<String, Uri?> =
+            rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.GetContent(),
+                onResult = { uri: Uri? ->
+                    decodeImageViewModel.loadImage(newImage = uri)
+                    analyzeImage(
+                        context = context,
+                        imageUri = uri,
+                        onQrCodeDetected = { newResult ->
+                            decodeImageViewModel.updateQrCodeResult(newResult = newResult)
+                        },
+                        onDetectFailed = {
+                            decodeImageViewModel.updateQrCodeResult(newResult = "")
+                        }
+                    )
+                }
+            )
 
         val isPhotosAndMediaPermissionAllowed: Boolean = when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> {
@@ -81,20 +105,41 @@ fun DecodeImageScreen() {
             }
         }
 
-        var loadingImageAreaState: LoadingImageAreaState by remember {
-            mutableStateOf(
-                value = if (isPhotosAndMediaPermissionAllowed)
+//        Init the loading image area state
+        LaunchedEffect(key1 = Unit) {
+            val newLoadingImageAreaState: LoadingImageAreaState =
+                if (isPhotosAndMediaPermissionAllowed) {
                     LoadingImageAreaState.INACTIVE
-                else
+                } else {
                     LoadingImageAreaState.NO_PHOTOS_AND_MEDIA_PERMISSION_ALLOWED
-            )
+                }
+
+            decodeImageViewModel.updateLoadingImageAreaState(newState = newLoadingImageAreaState)
+        }
+
+//       Handle the decoding event when option(s) is(are) enable
+        LaunchedEffect(key1 = decodeImageUiState.qrCodeResult) {
+            val currentQrCodeResult = decodeImageUiState.qrCodeResult
+            if (currentQrCodeResult.isNotEmpty()) {
+                launch {
+                    if (decodeImageUiState.autoCopyOptionEnable) {
+                        copyToClipBoard(context = context, textCopy = currentQrCodeResult)
+                    }
+                }
+
+                launch {
+                    if (decodeImageUiState.autoOpenWeblinkOptionEnable) {
+                        openWeblink(context = context, weblink = currentQrCodeResult)
+                    }
+                }
+            }
         }
 
         Column(
             verticalArrangement = Arrangement.spacedBy(space = gap400),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            when (loadingImageAreaState) {
+            when (decodeImageUiState.loadingImageAreaState) {
                 LoadingImageAreaState.NO_PHOTOS_AND_MEDIA_PERMISSION_ALLOWED -> {
                     Box(
                         modifier = Modifier.size(size = 200.dp),
@@ -116,12 +161,9 @@ fun DecodeImageScreen() {
                         )
                     }
 
-                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                        data = Uri.fromParts("package", context.packageName, null)
-                    }
                     Button(
                         label = R.string.decode_image_screen_request_permission_button_label,
-                        onPressEvent = { context.startActivity(intent) }
+                        onPressEvent = { gotoAppSetting(context = context) }
                     )
                 }
 
@@ -135,34 +177,41 @@ fun DecodeImageScreen() {
 
                     Button(
                         label = R.string.decode_image_screen_start_loading_button_label,
-                        onPressEvent = { loadingImageAreaState = LoadingImageAreaState.ACTIVE }
+                        onPressEvent = { loadImageLauncher.launch(input = "image/*") }
                     )
                 }
 
                 LoadingImageAreaState.ACTIVE -> {
                     Image(
-                        painter = painterResource(id = R.drawable.sample_qr_code_image),
+                        painter = rememberAsyncImagePainter(model = decodeImageUiState.pickedImage),
                         contentDescription = "",
                         modifier = Modifier
                             .size(size = 200.dp)
-                            .clip(shape = RectangleShape)
-                        ,
+                            .clip(shape = RectangleShape),
                         contentScale = ContentScale.Fit
                     )
 
                     Button(
                         label = R.string.decode_image_screen_stop_loading_button_label,
-                        onPressEvent = { loadingImageAreaState = LoadingImageAreaState.INACTIVE }
+                        onPressEvent = { decodeImageViewModel.unloadImage() }
                     )
                 }
             }
         }
 
-        TextField(placeHolder = R.string.decode_image_screen_text_field_place_holder)
+        TextField(
+            placeHolder = R.string.decode_image_screen_text_field_place_holder,
+            value = decodeImageUiState.qrCodeResult,
+            isReadOnly = true
+        )
 
         OptionMenu(
             option1Description = R.string.decode_image_screen_option_1_description,
+            option1State = decodeImageUiState.autoCopyOptionEnable,
+            onOption1StateChange = decodeImageViewModel.toggleAutoCopyOption,
             option2Description = R.string.decode_image_screen_option_2_description,
+            option2State = decodeImageUiState.autoOpenWeblinkOptionEnable,
+            onOption2StateChange = decodeImageViewModel.toggleAutoOpenWeblinkOption
         )
     }
 }

@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.kotlin.qrquicker.ui.styles.Elevation
+import app.kotlin.qrquicker.ui.styles.TRANSITION_DURATION
 import app.kotlin.qrquicker.ui.styles.elevation
 import app.kotlin.qrquicker.ui.styles.gap300
 import app.kotlin.qrquicker.ui.styles.gap600
@@ -28,13 +29,12 @@ import app.kotlin.qrquicker.ui.styles.primaryColor
 import app.kotlin.qrquicker.ui.styles.shapeLarge
 import app.kotlin.qrquicker.ui.styles.shapeMedium
 import app.kotlin.qrquicker.ui.styles.surfaceColor
-import app.kotlin.qrquicker.ui.styles.TRANSITION_DURATION
 
 @Composable
 fun NavigationBar(
     navigationBarItems: List<NavigationBarItem>,
     selectedIndex: Int,
-    onTabPressedEvent: (Int) -> Unit
+    onTabPressedEvent: (Int, String) -> Unit
 ) {
     // Tab indicator size in dp (consider externalizing to a dimension resource)
     val tabIndicatorSize = 60
@@ -112,7 +112,9 @@ fun NavigationBar(
                     icon = navigationBarItem.icon,
                     iconAltText = navigationBarItem.iconAltText,
                     label = navigationBarItem.label,
-                    onPressEvent = { onTabPressedEvent(index) }
+                    onPressEvent = {
+                        onTabPressedEvent(index, navigationBarItem.route)
+                    }
                 )
             }
         }

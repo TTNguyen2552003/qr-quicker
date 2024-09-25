@@ -2,55 +2,66 @@ package app.kotlin.qrquicker.ui.screens
 
 import android.Manifest
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
-import android.provider.Settings
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import app.kotlin.qrquicker.R
+import app.kotlin.qrquicker.helpers.copyToClipBoard
+import app.kotlin.qrquicker.helpers.gotoAppSetting
+import app.kotlin.qrquicker.helpers.openWeblink
 import app.kotlin.qrquicker.ui.components.Button
 import app.kotlin.qrquicker.ui.components.CameraPreviewView
 import app.kotlin.qrquicker.ui.components.OptionMenu
 import app.kotlin.qrquicker.ui.components.TextField
 import app.kotlin.qrquicker.ui.styles.bodySmall
+import app.kotlin.qrquicker.ui.styles.gap200
 import app.kotlin.qrquicker.ui.styles.gap400
+import app.kotlin.qrquicker.ui.styles.gap50
 import app.kotlin.qrquicker.ui.styles.gap600
 import app.kotlin.qrquicker.ui.styles.gap700
 import app.kotlin.qrquicker.ui.styles.noScale
+import app.kotlin.qrquicker.ui.styles.onPrimaryColor
 import app.kotlin.qrquicker.ui.styles.onSurfaceColor
+import app.kotlin.qrquicker.ui.styles.primaryColor
+import app.kotlin.qrquicker.ui.styles.shapeSmall
 import app.kotlin.qrquicker.ui.styles.surfaceColor
+import app.kotlin.qrquicker.ui.viewmodels.ScanQrUiState
+import app.kotlin.qrquicker.ui.viewmodels.ScanQrViewModel
+import app.kotlin.qrquicker.ui.viewmodels.ScanningAreaState
+import kotlinx.coroutines.launch
 
-private enum class ScanningAreaState {
-    NO_CAMERA_PERMISSION,
-    INACTIVE,
-    ACTIVE
-}
 
 @Composable
-fun ScanQrScreen() {
+fun ScanQrScreen(
+    scanQrViewModel: ScanQrViewModel = viewModel()
+) {
+    val scanQrUiState: ScanQrUiState by scanQrViewModel.uiState.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -64,23 +75,42 @@ fun ScanQrScreen() {
         val context: Context = LocalContext.current
 
         val isCameraPermissionAllow: Boolean =
-             context.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+            context.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
 
-        var scanningAreaState: ScanningAreaState by remember {
-            mutableStateOf(
-                value = if (isCameraPermissionAllow) {
-                    ScanningAreaState.INACTIVE
-                } else {
-                    ScanningAreaState.NO_CAMERA_PERMISSION
+//        Init state of scanning area
+        LaunchedEffect(key1 = Unit) {
+            val newScanningAreaState: ScanningAreaState = if (isCameraPermissionAllow) {
+                ScanningAreaState.INACTIVE
+            } else {
+                ScanningAreaState.NO_CAMERA_PERMISSION
+            }
+
+            scanQrViewModel.updateScanningAreaState(newState = newScanningAreaState)
+        }
+
+//        Handle the scanning event when option(s) is(are) enable
+        LaunchedEffect(key1 = scanQrUiState.qrCodeResult) {
+            val currentQrCodeResult = scanQrUiState.qrCodeResult
+            if (currentQrCodeResult.isNotEmpty()) {
+                launch {
+                    if (scanQrUiState.autoCopyOptionEnable) {
+                        copyToClipBoard(context = context, textCopy = currentQrCodeResult)
+                    }
                 }
-            )
+
+                launch {
+                    if (scanQrUiState.autoOpenWeblinkOptionEnable) {
+                        openWeblink(context = context, weblink = currentQrCodeResult)
+                    }
+                }
+            }
         }
 
         Column(
             verticalArrangement = Arrangement.spacedBy(space = gap400),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            when (scanningAreaState) {
+            when (scanQrUiState.scanningAreaState) {
                 ScanningAreaState.NO_CAMERA_PERMISSION -> {
                     Box(
                         modifier = Modifier.size(size = 200.dp),
@@ -102,12 +132,10 @@ fun ScanQrScreen() {
                         )
                     }
 
-                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                        data = Uri.fromParts("package", context.packageName, null)
-                    }
+
                     Button(
                         label = R.string.scan_qr_screen_request_permission_button_label,
-                        onPressEvent = { context.startActivity(intent) }
+                        onPressEvent = { gotoAppSetting(context) }
                     )
                 }
 
@@ -121,26 +149,79 @@ fun ScanQrScreen() {
 
                     Button(
                         label = R.string.scan_qr_screen_start_scanning_button_label,
-                        onPressEvent = { scanningAreaState = ScanningAreaState.ACTIVE }
+                        onPressEvent = scanQrViewModel.startScanning
                     )
                 }
 
                 ScanningAreaState.ACTIVE -> {
-                    CameraPreviewView()
+                    Box(modifier = Modifier.size(size = 200.dp)) {
+                        CameraPreviewView(
+                            onQrCodeDetected = { result ->
+                                scanQrViewModel.updateQrCodeResult(newResult = result)
+                            },
+                            torchEnabled = scanQrUiState.isFlashLightOn
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .align(alignment = Alignment.TopEnd)
+                                .offset(
+                                    x = -gap200,
+                                    y = gap200
+                                )
+                                .drawBehind {
+                                    drawRoundRect(
+                                        color = primaryColor,
+                                        cornerRadius = CornerRadius(shapeSmall.toPx())
+                                    )
+                                }
+                                .padding(all = gap50)
+                                .pointerInput(Unit) {
+                                    detectTapGestures(
+                                        onPress = {
+                                            tryAwaitRelease()
+                                            scanQrViewModel.toggleFlashLight()
+                                        }
+                                    )
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(
+                                    id = if (scanQrUiState.isFlashLightOn) {
+                                        R.drawable.flashlight_on
+                                    } else {
+                                        R.drawable.flashlight_off
+                                    }
+                                ),
+                                contentDescription = "flashlight icon",
+                                modifier = Modifier.size(size = 16.dp),
+                                colorFilter = ColorFilter.tint(color = onPrimaryColor)
+                            )
+                        }
+                    }
 
                     Button(
                         label = R.string.scan_qr_screen_stop_scanning_button_label,
-                        onPressEvent = { scanningAreaState = ScanningAreaState.INACTIVE }
+                        onPressEvent = scanQrViewModel.stopScanning
                     )
                 }
             }
         }
 
-        TextField(placeHolder = R.string.scan_qr_screen_text_field_place_holder)
+        TextField(
+            placeHolder = R.string.scan_qr_screen_text_field_place_holder,
+            value = scanQrUiState.qrCodeResult,
+            isReadOnly = true
+        )
 
         OptionMenu(
             option1Description = R.string.scan_qr_screen_option_1_description,
+            option1State = scanQrUiState.autoCopyOptionEnable,
+            onOption1StateChange = scanQrViewModel.toggleAutoCopyOption,
             option2Description = R.string.scan_qr_screen_option_2_description,
+            option2State = scanQrUiState.autoOpenWeblinkOptionEnable,
+            onOption2StateChange = scanQrViewModel.toggleAutoOpenWeblinkOption
         )
     }
 }
