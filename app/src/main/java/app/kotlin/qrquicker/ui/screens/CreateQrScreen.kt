@@ -7,18 +7,20 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import app.kotlin.qrquicker.R
 import app.kotlin.qrquicker.ui.components.Button
 import app.kotlin.qrquicker.ui.components.TextField
@@ -28,11 +30,15 @@ import app.kotlin.qrquicker.ui.styles.gap600
 import app.kotlin.qrquicker.ui.styles.noScale
 import app.kotlin.qrquicker.ui.styles.onSurfaceColor
 import app.kotlin.qrquicker.ui.styles.surfaceColor
-import kotlin.random.Random
+import app.kotlin.qrquicker.ui.viewmodels.CreateQrUiState
+import app.kotlin.qrquicker.ui.viewmodels.CreateQrViewModel
 
-@Preview
 @Composable
-fun CreateQrScreen() {
+fun CreateQrScreen(
+    createQrViewModel: CreateQrViewModel = viewModel(factory = CreateQrViewModel.factory)
+) {
+    val createQrUiState: CreateQrUiState by createQrViewModel.uiState.collectAsState()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -41,11 +47,13 @@ fun CreateQrScreen() {
             }
             .padding(all = gap600)
     ) {
-        TextField(placeHolder = R.string.create_qr_screen_text_field_place_holder)
+        TextField(
+            placeHolder = R.string.create_qr_screen_text_field_place_holder,
+            value = createQrUiState.textInput,
+            onValueChange = { newValue: String -> createQrViewModel.updateTextInput(newValue = newValue) }
+        )
 
-        val chance: Boolean = Random.nextBoolean()
-
-        if (chance) {
+        if (createQrUiState.textInput.isEmpty()) {
             Box(
                 modifier = Modifier
                     .size(size = 256.dp)
@@ -72,14 +80,19 @@ fun CreateQrScreen() {
                 verticalArrangement = Arrangement.spacedBy(space = gap300),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.sample_qr_code_result),
-                    contentDescription = "",
-                    modifier = Modifier.size(size = 256.dp),
-                    contentScale = ContentScale.FillBounds
-                )
+                createQrUiState.qrCodeResult?.asImageBitmap()?.let {
+                    Image(
+                        bitmap = it,
+                        contentDescription = "",
+                        modifier = Modifier.size(size = 256.dp),
+                        contentScale = ContentScale.FillBounds
+                    )
+                }
 
-                Button(label = R.string.create_qr_screen_save_button_label)
+                Button(
+                    label = R.string.create_qr_screen_save_button_label,
+                    onPressEvent = createQrViewModel.saveQrCode
+                )
             }
         }
     }

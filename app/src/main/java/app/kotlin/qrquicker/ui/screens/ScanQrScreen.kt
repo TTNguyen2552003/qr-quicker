@@ -30,9 +30,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import app.kotlin.qrquicker.DETECT_QR_FAILED_NOTIFICATION_BODY
+import app.kotlin.qrquicker.DETECT_QR_FAILED_NOTIFICATION_ID
+import app.kotlin.qrquicker.DETECT_QR_FAILED_NOTIFICATION_TITLE
 import app.kotlin.qrquicker.R
 import app.kotlin.qrquicker.helpers.copyToClipBoard
 import app.kotlin.qrquicker.helpers.gotoAppSetting
+import app.kotlin.qrquicker.helpers.makeNotification
 import app.kotlin.qrquicker.helpers.openWeblink
 import app.kotlin.qrquicker.ui.components.Button
 import app.kotlin.qrquicker.ui.components.CameraPreviewView
@@ -55,11 +59,8 @@ import app.kotlin.qrquicker.ui.viewmodels.ScanQrViewModel
 import app.kotlin.qrquicker.ui.viewmodels.ScanningAreaState
 import kotlinx.coroutines.launch
 
-
 @Composable
-fun ScanQrScreen(
-    scanQrViewModel: ScanQrViewModel = viewModel()
-) {
+fun ScanQrScreen(scanQrViewModel: ScanQrViewModel = viewModel()) {
     val scanQrUiState: ScanQrUiState by scanQrViewModel.uiState.collectAsState()
 
     Column(
@@ -158,6 +159,14 @@ fun ScanQrScreen(
                         CameraPreviewView(
                             onQrCodeDetected = { result ->
                                 scanQrViewModel.updateQrCodeResult(newResult = result)
+                            },
+                            onScanFailed = {
+                                makeNotification(
+                                    context = context,
+                                    title = DETECT_QR_FAILED_NOTIFICATION_TITLE,
+                                    body = DETECT_QR_FAILED_NOTIFICATION_BODY,
+                                    id = DETECT_QR_FAILED_NOTIFICATION_ID
+                                )
                             },
                             torchEnabled = scanQrUiState.isFlashLightOn
                         )

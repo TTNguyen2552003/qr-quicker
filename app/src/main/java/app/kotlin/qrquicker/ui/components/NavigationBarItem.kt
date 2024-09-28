@@ -22,12 +22,12 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import app.kotlin.qrquicker.TRANSITION_DURATION
 import app.kotlin.qrquicker.ui.styles.gap100
 import app.kotlin.qrquicker.ui.styles.labelSmall
 import app.kotlin.qrquicker.ui.styles.noScale
 import app.kotlin.qrquicker.ui.styles.onPrimaryColor
 import app.kotlin.qrquicker.ui.styles.onSurfaceColor
-import app.kotlin.qrquicker.ui.styles.TRANSITION_DURATION
 
 data class NavigationBarItem(
     @DrawableRes val icon: Int,

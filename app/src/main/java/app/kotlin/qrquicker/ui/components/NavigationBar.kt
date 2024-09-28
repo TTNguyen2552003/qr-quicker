@@ -20,8 +20,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import app.kotlin.qrquicker.TRANSITION_DURATION
 import app.kotlin.qrquicker.ui.styles.Elevation
-import app.kotlin.qrquicker.ui.styles.TRANSITION_DURATION
 import app.kotlin.qrquicker.ui.styles.elevation
 import app.kotlin.qrquicker.ui.styles.gap300
 import app.kotlin.qrquicker.ui.styles.gap600

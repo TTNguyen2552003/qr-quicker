@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -42,8 +43,7 @@ fun TextField(
     @StringRes placeHolder: Int,
     value: String = "",
     isReadOnly: Boolean = false,
-    onValueChange: () -> Unit = {},
-    clearInput: () -> Unit = {}
+    onValueChange: (String) -> Unit = { _ -> },
 ) {
     Row(
         modifier = Modifier
@@ -71,8 +71,11 @@ fun TextField(
         ) {
             item {
                 BasicTextField(
+                    modifier = Modifier
+                        .weight(weight = 1f)
+                        .fillMaxHeight(),
                     value = value,
-                    onValueChange = { onValueChange() },
+                    onValueChange = { onValueChange(it) },
                     textStyle = bodyLarge
                         .copy(color = onSurfaceColor)
                         .noScale(),
@@ -107,7 +110,7 @@ fun TextField(
                         detectTapGestures(
                             onPress = {
                                 tryAwaitRelease()
-                                clearInput()
+                                onValueChange("")
                             }
                         )
                     }

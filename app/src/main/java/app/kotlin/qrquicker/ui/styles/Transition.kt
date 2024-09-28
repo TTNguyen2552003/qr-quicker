@@ -4,8 +4,7 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-
-const val TRANSITION_DURATION: Int = 500
+import app.kotlin.qrquicker.TRANSITION_DURATION
 
 val slideInFromRight = slideInHorizontally(
     initialOffsetX = { it },
