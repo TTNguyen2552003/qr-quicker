@@ -14,6 +14,21 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
+/**
+ * Applies a drop shadow effect to this Modifier.
+ *
+ * This function draws a shadow behind the modifier using the provided parameters.
+ * By default, the shadow has a rectangular shape, but a custom `Shape` can be specified.
+ * You can also control the offset, blur radius, spread radius, and color of the shadow.
+ *
+ * @param shape The shape of the shadow. Defaults to [RectangleShape].
+ * @param offsetX The horizontal offset of the shadow from the modifier in density-independent pixels (dp). Defaults to 0.dp.
+ * @param offsetY The vertical offset of the shadow from the modifier in density-independent pixels (dp). Defaults to 0.dp.
+ * @param blurRadius The radius of the blur applied to the shadow in density-independent pixels (dp). Defaults to 0.dp, resulting in a sharp shadow.
+ * @param spreadRadius The amount of additional space to spread the shadow beyond its original bounds in density-independent pixels (dp). Defaults to 0.dp.
+ * @param color The color of the shadow. Defaults to black (0xFF000000).
+ * @return A new Modifier with the drop shadow effect applied.
+ */
 private fun Modifier.dropShadow(
     shape: Shape = RectangleShape,
     offsetX: Dp = 0.dp,
@@ -55,6 +70,11 @@ private fun Modifier.dropShadow(
     }
 }
 
+/**
+ * Holds the configuration values for a specific elevation level.
+ *
+ * This data class encapsulates the offsets, blur radii, and spread radii for each shadow layer used in an elevation effect.
+ */
 private data class ElevationValues(
     val layer1OffsetX: Dp,
     val layer1OffsetY: Dp,
@@ -76,6 +96,16 @@ enum class Elevation {
     LOW
 }
 
+/**
+ * Applies an elevation effect to this Modifier.
+ *
+ * This function uses predefined shadow configurations based on the provided [Elevation] level to create a multi-layered drop shadow effect.
+ *
+ * @param shape The shape of the shadow.
+ * @param elevation The desired elevation level.
+ * @return A new Modifier with the elevation effect applied.
+ * @throws IllegalArgumentException If an invalid elevation level is provided.
+ */
 fun Modifier.elevation(shape: Shape, elevation: Elevation): Modifier {
     val values: ElevationValues =
         elevationValues[elevation] ?: throw IllegalArgumentException("Invalid elevation")

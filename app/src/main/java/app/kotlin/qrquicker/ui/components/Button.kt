@@ -19,6 +19,13 @@ import app.kotlin.qrquicker.ui.styles.onPrimaryColor
 import app.kotlin.qrquicker.ui.styles.primaryColor
 import app.kotlin.qrquicker.ui.styles.shapeMedium
 
+/**
+ * A custom composable button that displays a label and triggers an event when pressed.
+ *
+ * @param label The string resource ID for the button's text label.
+ * @param onPressEvent The callback function that will be invoked when the button is pressed.
+ * It has a default value of an empty function.
+ */
 @Composable
 fun Button(
     @StringRes label: Int,
@@ -39,12 +46,13 @@ fun Button(
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {
-                        tryAwaitRelease()
-                        onPressEvent()
+                        tryAwaitRelease()   // Waits until the press is released.
+                        onPressEvent()  // Calls the event when the press is completed.
                     }
                 )
             }
     ) {
+//         Displays the text label of the button.
         Text(
             text = stringResource(id = label),
             style = labelLarge.noScale(),

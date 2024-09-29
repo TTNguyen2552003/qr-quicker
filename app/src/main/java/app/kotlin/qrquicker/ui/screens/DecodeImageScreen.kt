@@ -252,7 +252,7 @@ fun DecodeImageScreen(decodeImageViewModel: DecodeImageViewModel = viewModel()) 
             }
         }
 
-//        Text field to display the QR code result
+//        Text field displays the QR code result
         TextField(
             placeHolder = R.string.decode_image_screen_text_field_place_holder,
             value = decodeImageUiState.qrCodeResult,

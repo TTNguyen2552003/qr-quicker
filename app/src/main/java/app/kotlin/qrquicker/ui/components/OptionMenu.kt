@@ -24,6 +24,15 @@ import app.kotlin.qrquicker.ui.styles.shapeLarge
 import app.kotlin.qrquicker.ui.styles.surfaceColor
 import app.kotlin.qrquicker.ui.styles.title
 
+/**
+ * A composable function to display the option menu
+ * There are 2 options in the option menu
+ *
+ * @param option1Description is the id of resource of the option 1 description
+ * @param option1State represents the state of the option is enable or not
+ * @param onOption2StateChange will be invoked if the state of the option 1 is change
+ * The others have the same meaning
+ */
 @Composable
 fun OptionMenu(
     @StringRes option1Description: Int,

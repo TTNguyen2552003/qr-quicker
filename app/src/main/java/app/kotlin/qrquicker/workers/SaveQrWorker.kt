@@ -27,19 +27,29 @@ class SaveQrWorker(
     appContext = appContext,
     params = workerParameters
 ) {
-
+//     Prefix for the saved image title
     private val titlePrefix = "QR Quicker"
+
+//     Date-time formatter for creating unique file names
     private val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd 'at' HH:mm:ss z")
+
+//     Current date-time for file naming
     private val now: ZonedDateTime = ZonedDateTime.now()
 
     override suspend fun doWork(): Result {
+//         Perform the work on the IO dispatcher to avoid blocking the main thread
         return withContext(IO) {
             val contentResolver: ContentResolver = applicationContext.contentResolver
             return@withContext try {
+//                 Retrieve the QR code URI from the input data
                 val qrCodeUri = inputData.getString(KEY_QR_CODE_OUTPUT_VALUE)
+
+//                 Decode the QR code bitmap from the URI
                 val qrCodeBitmap = BitmapFactory.decodeStream(
                     contentResolver.openInputStream(Uri.parse(qrCodeUri))
                 )
+
+//                 Save the bitmap to the MediaStore
                 val imageUri = saveImageToMediaStore(
                     contentResolver = contentResolver,
                     bitmap = qrCodeBitmap,
@@ -47,6 +57,7 @@ class SaveQrWorker(
                 )
 
                 if (imageUri != null) {
+//                     If saving was successful, show a success notification
                     makeNotification(
                         context = applicationContext,
                         title = SAVE_QR_SUCCESSFUL_NOTIFICATION_TITLE,
@@ -55,6 +66,7 @@ class SaveQrWorker(
                     )
                     Result.success()
                 } else {
+//                     If saving failed, show a failure notification
                     makeNotification(
                         context = applicationContext,
                         title = SAVE_QR_FAILED_NOTIFICATION_TITLE,
@@ -64,6 +76,7 @@ class SaveQrWorker(
                     Result.failure()
                 }
             } catch (throwable: Throwable) {
+//                 If an exception occurred, show a failure notification
                 makeNotification(
                     context = applicationContext,
                     title = SAVE_QR_FAILED_NOTIFICATION_TITLE,

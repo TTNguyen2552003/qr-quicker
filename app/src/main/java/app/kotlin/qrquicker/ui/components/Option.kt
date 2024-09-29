@@ -22,6 +22,13 @@ import app.kotlin.qrquicker.ui.styles.onSurfaceColor
 import app.kotlin.qrquicker.ui.styles.shapeMedium
 import app.kotlin.qrquicker.ui.styles.surfaceColor
 
+/**
+ * A composable function that displays a toggle option with a description and manages its state.
+ *
+ * @param optionState The current state of the option (true for active, false for inactive). Defaults to false.
+ * @param description The string resource ID for the option's description text.
+ * @param onStateChange A callback function that is triggered when the state changes (i.e., when the toggle is pressed).
+ */
 @Composable
 fun Option(
     optionState: Boolean = false,
@@ -45,12 +52,14 @@ fun Option(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
+//         Displays the description of the option.
         Text(
             text = stringResource(id = description),
             style = bodySmall.noScale(),
             color = onSurfaceColor
         )
 
+//         Displays a toggle button that represents the state of the option.
         Toggle(
             state = optionState,
             onStateChange = onStateChange

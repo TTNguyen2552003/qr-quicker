@@ -30,27 +30,34 @@ import app.kotlin.qrquicker.ui.styles.shapeLarge
 import app.kotlin.qrquicker.ui.styles.shapeMedium
 import app.kotlin.qrquicker.ui.styles.surfaceColor
 
+/**
+ * A composable function to create the navigation bar
+ *
+ * @param navigationBarItems is list of navigation bar items (Create QR, Scan QR, Decode Image)
+ * @param selectedIndex is currently selected tab index
+ * @param onTabPressedEvent event handler for tab press (Change the tab and update the selected/previous indices, change the current destination)
+ */
 @Composable
 fun NavigationBar(
     navigationBarItems: List<NavigationBarItem>,
     selectedIndex: Int,
     onTabPressedEvent: (Int, String) -> Unit
 ) {
-    // Tab indicator size in dp (consider externalizing to a dimension resource)
+//     Tab indicator size in dp (consider externalizing to a dimension resource)
     val tabIndicatorSize = 60
 
-    // Padding and margins
+//     Padding and margins
     val totalHorizontalPadding = gap600.value * 4
 
-    // Screen width and number of navigation items
+//     Screen width and number of navigation items
     val navWidth: Int = LocalConfiguration.current.screenWidthDp
     val numberOfItems: Int = navigationBarItems.size
 
-    // Calculate the distance between navigation items
+//     Calculate the distance between navigation items
     val totalUsedWidth = numberOfItems * tabIndicatorSize + totalHorizontalPadding
     val itemDistance: Float = (navWidth - totalUsedWidth) / (numberOfItems - 1)
 
-    // Animate tab indicator offset along the x-axis
+//     Animate tab indicator offset along the x-axis
     val tabIndicatorOffsetX: Dp by animateDpAsState(
         targetValue = gap600 + (selectedIndex * (itemDistance + tabIndicatorSize)).dp,
         animationSpec = tween(

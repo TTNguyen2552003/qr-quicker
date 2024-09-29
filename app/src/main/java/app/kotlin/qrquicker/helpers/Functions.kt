@@ -23,7 +23,11 @@ import app.kotlin.qrquicker.CHANNEL_DESCRIPTION
 import app.kotlin.qrquicker.CHANNEL_ID
 import app.kotlin.qrquicker.CHANNEL_NAME
 import app.kotlin.qrquicker.OUTPUT_PATH
+import app.kotlin.qrquicker.QR_CODE_RESULT_IMAGE_SIZE
 import app.kotlin.qrquicker.R
+import app.kotlin.qrquicker.SAVE_QR_FAILED_NOTIFICATION_BODY
+import app.kotlin.qrquicker.SAVE_QR_FAILED_NOTIFICATION_ID
+import app.kotlin.qrquicker.SAVE_QR_FAILED_NOTIFICATION_TITLE
 import app.kotlin.qrquicker.SAVE_QR_SUCCESSFUL_NOTIFICATION_ID
 import app.kotlin.qrquicker.ui.styles.onSurfaceColor
 import app.kotlin.qrquicker.ui.styles.surfaceColor
@@ -42,14 +46,24 @@ import java.io.IOException
 import java.io.OutputStream
 import java.util.UUID
 
+/**
+ * Opens the application settings page for the current app.
+ *
+ * @param context The context used to start the activity.
+ */
 fun gotoAppSetting(context: Context) {
     val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
         data = Uri.fromParts("package", context.packageName, null)
     }
-
     context.startActivity(intent)
 }
 
+/**
+ * Copies the given text to the clipboard and shows a toast message.
+ *
+ * @param context The context used to access the clipboard service and show the toast.
+ * @param textCopy The text to be copied to the clipboard.
+ */
 fun copyToClipBoard(context: Context, textCopy: String) {
     val clipBoardManager: ClipboardManager = context
         .getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
@@ -65,10 +79,15 @@ fun copyToClipBoard(context: Context, textCopy: String) {
         context,
         context.getString(R.string.toast_message_auto_copy_to_clipboard_option),
         Toast.LENGTH_LONG
-    )
-        .show()
+    ).show()
 }
 
+/**
+ * Opens a web link in the default browser if it's a valid HTTPS URL.
+ *
+ * @param context The context used to start the activity.
+ * @param weblink The URL to be opened.
+ */
 fun openWeblink(context: Context, weblink: String) {
     if (URLUtil.isHttpsUrl(weblink)) {
         val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(weblink))
@@ -76,6 +95,14 @@ fun openWeblink(context: Context, weblink: String) {
     }
 }
 
+/**
+ * Analyzes an image for QR codes using ML Kit's Barcode Scanning API.
+ *
+ * @param context The context used to create the InputImage.
+ * @param imageUri The URI of the image to be analyzed.
+ * @param onQrCodeDetected Callback function when a QR code is detected.
+ * @param onDetectFailed Callback function when detection fails.
+ */
 fun analyzeImage(
     context: Context,
     imageUri: Uri?,
@@ -107,9 +134,15 @@ fun analyzeImage(
     }
 }
 
+/**
+ * Generates a QR code bitmap from the given text.
+ *
+ * @param text The text to be encoded in the QR code.
+ * @return A Bitmap representing the generated QR code.
+ */
 fun generateQRCode(text: String): Bitmap {
-    val width = 256
-    val height = 256
+    val width = QR_CODE_RESULT_IMAGE_SIZE
+    val height = QR_CODE_RESULT_IMAGE_SIZE
 
     val bitMatrix: BitMatrix = MultiFormatWriter().encode(
         text,
@@ -137,6 +170,15 @@ fun generateQRCode(text: String): Bitmap {
     return bitmap
 }
 
+/**
+ * Writes a bitmap to a file in the app's internal storage.
+ *
+ * @param applicationContext The context used to access the app's file system.
+ * @param bitmap The bitmap to be written to the file.
+ * @return The URI of the written file.
+ * @throws FileNotFoundException If the file cannot be created or opened.
+ *
+ */
 @Throws(FileNotFoundException::class)
 fun writeBitmapToFile(applicationContext: Context, bitmap: Bitmap): Uri {
     val name: String = String.format("qr-code-output-%s.png", UUID.randomUUID().toString())
@@ -154,13 +196,26 @@ fun writeBitmapToFile(applicationContext: Context, bitmap: Bitmap): Uri {
             try {
                 it.close()
             } catch (e: IOException) {
-                /* TODO */
+                makeNotification(
+                    context = applicationContext,
+                    title = SAVE_QR_FAILED_NOTIFICATION_TITLE,
+                    body = SAVE_QR_FAILED_NOTIFICATION_BODY,
+                    id = SAVE_QR_FAILED_NOTIFICATION_ID
+                )
             }
         }
     }
     return Uri.fromFile(outputFile)
 }
 
+/**
+ * Saves an image to the device's MediaStore.
+ *
+ * @param contentResolver The ContentResolver used to interact with the MediaStore.
+ * @param bitmap The bitmap to be saved.
+ * @param title The title of the image (without extension).
+ * @return The URI of the saved image, or null if saving failed.
+ */
 fun saveImageToMediaStore(
     contentResolver: ContentResolver,
     bitmap: Bitmap,
@@ -173,14 +228,14 @@ fun saveImageToMediaStore(
         put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis())
     }
 
-    // Define where to save the image (external storage directory or public pictures)
+//     Define where to save the image (external storage directory or public pictures)
     val imageUri: Uri? = contentResolver.insert(
         MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
         contentValues
     )
 
     imageUri?.let {
-        // Open output stream to the URI and write the bitmap data
+//         Open output stream to the URI and write the bitmap data
         contentResolver.openOutputStream(it).use { outputStream: OutputStream? ->
             if (outputStream != null) {
                 bitmap.compress(Bitmap.CompressFormat.PNG, 0, outputStream)
@@ -191,6 +246,14 @@ fun saveImageToMediaStore(
     return imageUri
 }
 
+/**
+ * Creates and shows a notification.
+ *
+ * @param context The context used to create and show the notification.
+ * @param title The title of the notification.
+ * @param body The body text of the notification.
+ * @param id The unique identifier for the notification.
+ */
 fun makeNotification(
     context: Context,
     title: String,
@@ -218,8 +281,9 @@ fun makeNotification(
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setVibrate(LongArray(size = 0))
 
+//     Add a content intent to open the gallery for successful QR code saves
     if (id == SAVE_QR_SUCCESSFUL_NOTIFICATION_ID) {
-        val intent = Intent(Intent.ACTION_VIEW, MediaStore.Images.Media.INTERNAL_CONTENT_URI)
+        val intent = Intent(Intent.ACTION_VIEW, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
         val pendingIntent: PendingIntent = PendingIntent
             .getActivity(
                 context,

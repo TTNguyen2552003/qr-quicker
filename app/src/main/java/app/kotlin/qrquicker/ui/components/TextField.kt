@@ -38,6 +38,15 @@ import app.kotlin.qrquicker.ui.styles.onSurfaceVariantColor
 import app.kotlin.qrquicker.ui.styles.shapeMedium
 import app.kotlin.qrquicker.ui.styles.surfaceColor
 
+/**
+ * A composable function to represent input the text and represent the result of detecting QR code
+ *
+ * @param placeHolder is the id of the string resource of place holder of text field
+ * @param value shows the result of QR detecting event or the text user inputs.
+ * It has default value is empty. And if it is empty, the place holder will be visible
+ * @param isReadOnly detect the text field can be input by user or not
+ * @param onValueChange invoked tp update the current value in the text field
+ */
 @Composable
 fun TextField(
     @StringRes placeHolder: Int,
@@ -109,8 +118,8 @@ fun TextField(
                     .pointerInput(Unit) {
                         detectTapGestures(
                             onPress = {
-                                tryAwaitRelease()
-                                onValueChange("")
+                                tryAwaitRelease()   // Waits until the press is released.
+                                onValueChange("")   // Clear the content in the text field
                             }
                         )
                     }

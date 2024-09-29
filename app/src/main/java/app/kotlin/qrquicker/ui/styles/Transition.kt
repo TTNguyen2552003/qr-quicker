@@ -1,12 +1,14 @@
 package app.kotlin.qrquicker.ui.styles
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import app.kotlin.qrquicker.TRANSITION_DURATION
 
-val slideInFromRight = slideInHorizontally(
+val slideInFromRight: EnterTransition = slideInHorizontally(
     initialOffsetX = { it },
     animationSpec = tween(
         durationMillis = TRANSITION_DURATION,
@@ -14,7 +16,7 @@ val slideInFromRight = slideInHorizontally(
     )
 )
 
-val slideInFromLeft = slideInHorizontally(
+val slideInFromLeft: EnterTransition = slideInHorizontally(
     initialOffsetX = { -it },
     animationSpec = tween(
         durationMillis = TRANSITION_DURATION,
@@ -22,7 +24,7 @@ val slideInFromLeft = slideInHorizontally(
     )
 )
 
-val slideOutFromRight = slideOutHorizontally(
+val slideOutFromRight: ExitTransition = slideOutHorizontally(
     targetOffsetX = { -it },
     animationSpec = tween(
         durationMillis = TRANSITION_DURATION,
@@ -30,7 +32,7 @@ val slideOutFromRight = slideOutHorizontally(
     )
 )
 
-val slideOutFromLeft = slideOutHorizontally(
+val slideOutFromLeft: ExitTransition = slideOutHorizontally(
     targetOffsetX = { it },
     animationSpec = tween(
         durationMillis = TRANSITION_DURATION,

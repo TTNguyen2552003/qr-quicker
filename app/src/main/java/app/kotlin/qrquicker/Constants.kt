@@ -4,6 +4,8 @@ const val TRANSITION_DURATION: Int = 500
 
 const val MAX_INPUT_TEXT_LENGTH: Int = 100
 
+const val QR_CODE_RESULT_IMAGE_SIZE: Int = 256
+
 const val KEY_TEXT_INPUT_VALUE: String = "TEXT_INPUT_VALUE"
 const val KEY_QR_CODE_OUTPUT_VALUE: String = "QR_CODE_OUTPUT_VALUE"
 const val OUTPUT_PATH: String = "qr_quicker_output"

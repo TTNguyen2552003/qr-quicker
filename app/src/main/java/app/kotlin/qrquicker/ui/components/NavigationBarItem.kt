@@ -29,6 +29,14 @@ import app.kotlin.qrquicker.ui.styles.noScale
 import app.kotlin.qrquicker.ui.styles.onPrimaryColor
 import app.kotlin.qrquicker.ui.styles.onSurfaceColor
 
+/**
+ * A composable function to represent the tab in the navigation bar
+ *
+ * @param icon associated with navigation tab in the navigation bar
+ * @param iconAltText is accessibility description for the icon
+ * @param label is the label of tab
+ * @param route is the destination that the tab navigate to
+ */
 data class NavigationBarItem(
     @DrawableRes val icon: Int,
     val iconAltText: String = "",

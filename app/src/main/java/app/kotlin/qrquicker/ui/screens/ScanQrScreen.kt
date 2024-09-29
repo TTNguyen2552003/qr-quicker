@@ -262,7 +262,7 @@ fun ScanQrScreen(scanQrViewModel: ScanQrViewModel = viewModel()) {
             }
         }
 
-//        Text field to display scanned QR code result
+//        Text field displays scanned QR code result
         TextField(
             placeHolder = R.string.scan_qr_screen_text_field_place_holder,
             value = scanQrUiState.qrCodeResult,

@@ -58,6 +58,7 @@ import app.kotlin.qrquicker.ui.viewmodels.CreateQrViewModel
 fun CreateQrScreen(
     createQrViewModel: CreateQrViewModel = viewModel(factory = CreateQrViewModel.factory)
 ) {
+//    Collect the UI state from the ViewModel
     val createQrUiState: CreateQrUiState by createQrViewModel.uiState.collectAsState()
 
     val context: Context = LocalContext.current
@@ -85,6 +86,7 @@ fun CreateQrScreen(
         }
     }
 
+//    If the permission is not allow, run a launcher to request
     if (!createQrUiState.notificationEnable) {
         val permissionLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestPermission()
@@ -105,7 +107,7 @@ fun CreateQrScreen(
             }
             .padding(all = gap600)
     ) {
-//        Text field to contain the text from user
+//        Text field contains the text from user
         TextField(
             placeHolder = R.string.create_qr_screen_text_field_place_holder,
             value = createQrUiState.textInput,

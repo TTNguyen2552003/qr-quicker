@@ -28,6 +28,12 @@ import app.kotlin.qrquicker.ui.styles.shapeLarge
 import app.kotlin.qrquicker.ui.styles.stateLayerInactiveColor
 import app.kotlin.qrquicker.ui.styles.surfaceColor
 
+/**
+ * A composable function represent the selection of an item is on or off
+ *
+ * @param state Represent the selection of the item. True is on and false is off
+ * @param onStateChange Callback function called when the state is changed
+ */
 @Composable
 fun Toggle(
     state: Boolean = false,
@@ -70,7 +76,8 @@ fun Toggle(
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {
-                        onStateChange()
+                        tryAwaitRelease()   // Waits until the press is released.
+                        onStateChange()     // Calls the event when the press is completed.
                     }
                 )
             },
