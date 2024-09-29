@@ -4,6 +4,8 @@
     <string name="create_qr_screen_text_field_place_holder">Input the text</string>
     <string name="create_qr_screen_result_place_holder_text">QR code will appear here</string>
     <string name="create_qr_screen_save_button_label">Save</string>
+    <string name="create_qr_screen_permission_request_rationale">Allow notification to have a better experience.</string>
+    <string name="create_qr_screen_text_button_label">Allow</string>
 
     <string name="scan_qr_screen_scanning_area_place_holder_text_without_permission">You need to allow the app to\naccess camera</string>
     <string name="scan_qr_screen_request_permission_button_label">Allow</string>

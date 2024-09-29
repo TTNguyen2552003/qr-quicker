@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -34,6 +35,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.kotlin.qrquicker.DETECT_QR_FAILED_NOTIFICATION_BODY
 import app.kotlin.qrquicker.DETECT_QR_FAILED_NOTIFICATION_ID
@@ -60,9 +65,8 @@ import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.launch
 
 @Composable
-fun DecodeImageScreen(
-    decodeImageViewModel: DecodeImageViewModel = viewModel()
-) {
+fun DecodeImageScreen(decodeImageViewModel: DecodeImageViewModel = viewModel()) {
+//    Collect the UI state from the ViewModel
     val decodeImageUiState: DecodeImageUiState by decodeImageViewModel.uiState.collectAsState()
 
     Column(
@@ -76,58 +80,69 @@ fun DecodeImageScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         val context: Context = LocalContext.current
-        val loadImageLauncher: ManagedActivityResultLauncher<String, Uri?> =
-            rememberLauncherForActivityResult(
-                contract = ActivityResultContracts.GetContent(),
-                onResult = { uri: Uri? ->
-                    decodeImageViewModel.loadImage(newImage = uri)
-                    analyzeImage(
-                        context = context,
-                        imageUri = uri,
-                        onQrCodeDetected = { newResult ->
-                            decodeImageViewModel.updateQrCodeResult(newResult = newResult)
-                        },
-                        onDetectFailed = {
-                            decodeImageViewModel.updateQrCodeResult(newResult = "")
-                            makeNotification(
-                                context = context,
-                                title = DETECT_QR_FAILED_NOTIFICATION_TITLE,
-                                body = DETECT_QR_FAILED_NOTIFICATION_BODY,
-                                id = DETECT_QR_FAILED_NOTIFICATION_ID
-                            )
+
+//        Lifecycle observer to handle permission checks when the app resumes or start
+        val lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
+        DisposableEffect(lifecycleOwner) {
+            val observer = LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME || event == Lifecycle.Event.ON_START) {
+//                    Check read media images permission state
+                    val isPhotosAndMediaPermissionAllowed: Boolean = when {
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> {
+                            context.checkSelfPermission(READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED &&
+                                    context.checkSelfPermission(READ_MEDIA_VISUAL_USER_SELECTED) == PackageManager.PERMISSION_GRANTED
                         }
-                    )
+
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
+                            context.checkSelfPermission(READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED
+                        }
+
+                        else -> {
+                            context.checkSelfPermission(READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+                        }
+                    }
+
+//                     Update the state in ViewModel
+                    val newLoadingImageAreaState: LoadingImageAreaState =
+                        if (isPhotosAndMediaPermissionAllowed) {
+                            LoadingImageAreaState.INACTIVE
+                        } else {
+                            LoadingImageAreaState.NO_PHOTOS_AND_MEDIA_PERMISSION_ALLOWED
+                        }
+                    decodeImageViewModel.updateLoadingImageAreaState(newState = newLoadingImageAreaState)
                 }
-            )
-
-        val isPhotosAndMediaPermissionAllowed: Boolean = when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> {
-                context.checkSelfPermission(READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED &&
-                        context.checkSelfPermission(READ_MEDIA_VISUAL_USER_SELECTED) == PackageManager.PERMISSION_GRANTED
             }
-
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
-                context.checkSelfPermission(READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED
-            }
-
-            else -> {
-                context.checkSelfPermission(READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+            lifecycleOwner.lifecycle.addObserver(observer)
+            onDispose {
+                lifecycleOwner.lifecycle.removeObserver(observer)
             }
         }
 
-//        Init the loading image area state
-        LaunchedEffect(key1 = Unit) {
-            val newLoadingImageAreaState: LoadingImageAreaState =
-                if (isPhotosAndMediaPermissionAllowed) {
-                    LoadingImageAreaState.INACTIVE
+//        Request read media images permission if not granted
+        if (decodeImageUiState.loadingImageAreaState == LoadingImageAreaState.NO_PHOTOS_AND_MEDIA_PERMISSION_ALLOWED) {
+            val permissionLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission()
+            ) { isGranted ->
+//                Update the state in ViewModel
+                val newLoadingImageAreaState: LoadingImageAreaState =
+                    if (isGranted) {
+                        LoadingImageAreaState.INACTIVE
+                    } else {
+                        LoadingImageAreaState.NO_PHOTOS_AND_MEDIA_PERMISSION_ALLOWED
+                    }
+                decodeImageViewModel.updateLoadingImageAreaState(newState = newLoadingImageAreaState)
+            }
+
+            LaunchedEffect(key1 = Unit) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    permissionLauncher.launch(READ_MEDIA_IMAGES)
                 } else {
-                    LoadingImageAreaState.NO_PHOTOS_AND_MEDIA_PERMISSION_ALLOWED
+                    permissionLauncher.launch(READ_EXTERNAL_STORAGE)
                 }
-
-            decodeImageViewModel.updateLoadingImageAreaState(newState = newLoadingImageAreaState)
+            }
         }
 
-//       Handle the decoding event when option(s) is(are) enable
+//       Handle QR code scanning results
         LaunchedEffect(key1 = decodeImageUiState.qrCodeResult) {
             val currentQrCodeResult = decodeImageUiState.qrCodeResult
             if (currentQrCodeResult.isNotEmpty()) {
@@ -145,11 +160,37 @@ fun DecodeImageScreen(
             }
         }
 
+//        Create and handle the load image event in app
+        val loadImageLauncher: ManagedActivityResultLauncher<String, Uri?> =
+            rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.GetContent(),
+                onResult = { imageUri: Uri? ->
+                    decodeImageViewModel.loadImage(newImage = imageUri)
+                    analyzeImage(
+                        context = context,
+                        imageUri = imageUri,
+                        onQrCodeDetected = { newResult ->
+                            decodeImageViewModel.updateQrCodeResult(newResult = newResult)
+                        },
+                        onDetectFailed = {
+                            decodeImageViewModel.updateQrCodeResult(newResult = "")
+                            makeNotification(
+                                context = context,
+                                title = DETECT_QR_FAILED_NOTIFICATION_TITLE,
+                                body = DETECT_QR_FAILED_NOTIFICATION_BODY,
+                                id = DETECT_QR_FAILED_NOTIFICATION_ID
+                            )
+                        }
+                    )
+                }
+            )
+
         Column(
             verticalArrangement = Arrangement.spacedBy(space = gap400),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             when (decodeImageUiState.loadingImageAreaState) {
+//                Loading image area when no read media images permission granted
                 LoadingImageAreaState.NO_PHOTOS_AND_MEDIA_PERMISSION_ALLOWED -> {
                     Box(
                         modifier = Modifier.size(size = 200.dp),
@@ -177,6 +218,7 @@ fun DecodeImageScreen(
                     )
                 }
 
+//                Loading image area when there is no image loaded
                 LoadingImageAreaState.INACTIVE -> {
                     Image(
                         painter = painterResource(R.drawable.image_view_place_holder),
@@ -191,6 +233,7 @@ fun DecodeImageScreen(
                     )
                 }
 
+//                Loading image area when image loaded
                 LoadingImageAreaState.ACTIVE -> {
                     Image(
                         painter = rememberAsyncImagePainter(model = decodeImageUiState.pickedImage),
@@ -209,12 +252,14 @@ fun DecodeImageScreen(
             }
         }
 
+//        Text field to display the QR code result
         TextField(
             placeHolder = R.string.decode_image_screen_text_field_place_holder,
             value = decodeImageUiState.qrCodeResult,
             isReadOnly = true
         )
 
+//         Options menu for auto-copy and auto-open weblink
         OptionMenu(
             option1Description = R.string.decode_image_screen_option_1_description,
             option1State = decodeImageUiState.autoCopyOptionEnable,

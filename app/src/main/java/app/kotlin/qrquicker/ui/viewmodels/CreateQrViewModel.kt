@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 data class CreateQrUiState(
+    val notificationEnable: Boolean = false,
     val textInput: String = "",
     val qrCodeResult: Bitmap? = null
 )
@@ -77,6 +78,12 @@ class CreateQrViewModel(private val qrCreationRepository: QrCreationRepository) 
                     qrCreationRepository.createQrCode(text = _uiState.value.textInput)
                 }
             }
+        }
+    }
+
+    fun updateNotificationPermissionState(newState: Boolean) {
+        _uiState.update { currentState->
+            currentState.copy(notificationEnable = newState)
         }
     }
 

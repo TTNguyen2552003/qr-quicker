@@ -3,6 +3,8 @@ package app.kotlin.qrquicker.ui.screens
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -29,6 +32,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.kotlin.qrquicker.DETECT_QR_FAILED_NOTIFICATION_BODY
 import app.kotlin.qrquicker.DETECT_QR_FAILED_NOTIFICATION_ID
@@ -61,6 +68,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun ScanQrScreen(scanQrViewModel: ScanQrViewModel = viewModel()) {
+//    Collect the UI state from the ViewModel
     val scanQrUiState: ScanQrUiState by scanQrViewModel.uiState.collectAsState()
 
     Column(
@@ -75,21 +83,54 @@ fun ScanQrScreen(scanQrViewModel: ScanQrViewModel = viewModel()) {
     ) {
         val context: Context = LocalContext.current
 
-        val isCameraPermissionAllow: Boolean =
-            context.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+//        Lifecycle observer to handle permission checks when the app resumes
+        val lifecycleOwner = LocalLifecycleOwner.current
+        DisposableEffect(lifecycleOwner) {
+            val observer = LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME || event == Lifecycle.Event.ON_START) {
+//                    Check camera permission status
+                    val isCameraPermissionAllow = ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.CAMERA
+                    ) == PackageManager.PERMISSION_GRANTED
 
-//        Init state of scanning area
-        LaunchedEffect(key1 = Unit) {
-            val newScanningAreaState: ScanningAreaState = if (isCameraPermissionAllow) {
-                ScanningAreaState.INACTIVE
-            } else {
-                ScanningAreaState.NO_CAMERA_PERMISSION
+//                    Update scanning area state based on permission
+                    val newScanningAreaState: ScanningAreaState = if (isCameraPermissionAllow) {
+                        ScanningAreaState.INACTIVE
+                    } else {
+                        ScanningAreaState.NO_CAMERA_PERMISSION
+                    }
+
+//                    Update the state in ViewModel
+                    scanQrViewModel.updateScanningAreaState(newState = newScanningAreaState)
+                }
             }
-
-            scanQrViewModel.updateScanningAreaState(newState = newScanningAreaState)
+            lifecycleOwner.lifecycle.addObserver(observer)
+            onDispose {
+                lifecycleOwner.lifecycle.removeObserver(observer)
+            }
         }
 
-//        Handle the scanning event when option(s) is(are) enable
+//        Request camera permission if not granted
+        if (scanQrUiState.scanningAreaState == ScanningAreaState.NO_CAMERA_PERMISSION) {
+            val permissionLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission()
+            ) { isGranted ->
+//               Update the state in ViewModel
+                val newScanningAreaState: ScanningAreaState = if (isGranted) {
+                    ScanningAreaState.INACTIVE
+                } else {
+                    ScanningAreaState.NO_CAMERA_PERMISSION
+                }
+                scanQrViewModel.updateScanningAreaState(newState = newScanningAreaState)
+            }
+
+            LaunchedEffect(key1 = Unit) {
+                permissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+        }
+
+//        Handle QR code scanning results
         LaunchedEffect(key1 = scanQrUiState.qrCodeResult) {
             val currentQrCodeResult = scanQrUiState.qrCodeResult
             if (currentQrCodeResult.isNotEmpty()) {
@@ -112,6 +153,7 @@ fun ScanQrScreen(scanQrViewModel: ScanQrViewModel = viewModel()) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             when (scanQrUiState.scanningAreaState) {
+//                Scanning area when camera permission is not granted
                 ScanningAreaState.NO_CAMERA_PERMISSION -> {
                     Box(
                         modifier = Modifier.size(size = 200.dp),
@@ -140,6 +182,7 @@ fun ScanQrScreen(scanQrViewModel: ScanQrViewModel = viewModel()) {
                     )
                 }
 
+//                Scanning area when scanner is inactive
                 ScanningAreaState.INACTIVE -> {
                     Image(
                         painter = painterResource(R.drawable.scanning_view_place_holder),
@@ -171,6 +214,7 @@ fun ScanQrScreen(scanQrViewModel: ScanQrViewModel = viewModel()) {
                             torchEnabled = scanQrUiState.isFlashLightOn
                         )
 
+//                        Flashlight toggle button
                         Box(
                             modifier = Modifier
                                 .align(alignment = Alignment.TopEnd)
@@ -218,12 +262,14 @@ fun ScanQrScreen(scanQrViewModel: ScanQrViewModel = viewModel()) {
             }
         }
 
+//        Text field to display scanned QR code result
         TextField(
             placeHolder = R.string.scan_qr_screen_text_field_place_holder,
             value = scanQrUiState.qrCodeResult,
             isReadOnly = true
         )
 
+//         Options menu for auto-copy and auto-open weblink
         OptionMenu(
             option1Description = R.string.scan_qr_screen_option_1_description,
             option1State = scanQrUiState.autoCopyOptionEnable,

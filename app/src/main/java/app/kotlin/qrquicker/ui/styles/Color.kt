@@ -10,6 +10,7 @@ val onSurfaceColor: Color = Color(color = 0xFF333333)
 val onSurfaceVariantColor: Color = Color(color = 0xFF888888)
 
 val stateLayerInactiveColor: Color = Color(color = 0xFFDDDDDD)
+val stateLayerHyperlinkColor:Color = Color(color = 0xFF0000FF)
 
 val shadowLayerColor1: Color = Color(color = 0x33000000)
 val shadowLayerColor2: Color = Color(color = 0x1A000000)
