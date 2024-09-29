@@ -11,6 +11,7 @@ import android.content.Context
 import android.content.Context.CLIPBOARD_SERVICE
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.provider.MediaStore
 import android.provider.Settings
@@ -30,6 +31,7 @@ import app.kotlin.qrquicker.SAVE_QR_FAILED_NOTIFICATION_ID
 import app.kotlin.qrquicker.SAVE_QR_FAILED_NOTIFICATION_TITLE
 import app.kotlin.qrquicker.SAVE_QR_SUCCESSFUL_NOTIFICATION_ID
 import app.kotlin.qrquicker.ui.styles.onSurfaceColor
+import app.kotlin.qrquicker.ui.styles.primaryColor
 import app.kotlin.qrquicker.ui.styles.surfaceColor
 import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
@@ -264,6 +266,10 @@ fun makeNotification(
     val description: String = CHANNEL_DESCRIPTION
     val channelId: String = CHANNEL_ID
     val important: Int = NotificationManager.IMPORTANCE_HIGH
+    val largeIcon: Bitmap? = BitmapFactory.decodeResource(
+            context.resources,
+            R.drawable.ic_launcher_foreground
+        )
     val channel = NotificationChannel(channelId, name, important).also {
         it.description = description
     }
@@ -276,10 +282,13 @@ fun makeNotification(
     val notificationBuilder: NotificationCompat.Builder =
         NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setLargeIcon(largeIcon)
             .setContentTitle(title)
             .setContentText(body)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setVibrate(LongArray(size = 0))
+            .setAutoCancel(true)
+            .setColor(primaryColor.toArgb())
 
 //     Add a content intent to open the gallery for successful QR code saves
     if (id == SAVE_QR_SUCCESSFUL_NOTIFICATION_ID) {
