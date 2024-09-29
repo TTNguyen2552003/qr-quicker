@@ -169,31 +169,6 @@ fun DecodeImageScreen(decodeImageViewModel: DecodeImageViewModel = viewModel()) 
         }
 
 //        Create and handle the load image event in app
-        val loadImageLauncher: ManagedActivityResultLauncher<String, Uri?> =
-            rememberLauncherForActivityResult(
-                contract = ActivityResultContracts.GetContent(),
-                onResult = { imageUri: Uri? ->
-                    analyzeImage(
-                        context = context,
-                        imageUri = imageUri,
-                        onQrCodeDetected = { newResult ->
-                            decodeImageViewModel.loadImage(newImage = imageUri)
-                            decodeImageViewModel.updateQrCodeResult(newResult = newResult)
-                        },
-                        onDetectFailed = {
-                            decodeImageViewModel.loadImage(newImage = imageUri)
-                            decodeImageViewModel.updateQrCodeResult(newResult = "")
-                            makeNotification(
-                                context = context,
-                                title = DETECT_QR_FAILED_NOTIFICATION_TITLE,
-                                body = DETECT_QR_FAILED_NOTIFICATION_BODY,
-                                id = DETECT_QR_FAILED_NOTIFICATION_ID
-                            )
-                        }
-                    )
-                }
-            )
-
         Column(
             verticalArrangement = Arrangement.spacedBy(space = gap400),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -229,6 +204,31 @@ fun DecodeImageScreen(decodeImageViewModel: DecodeImageViewModel = viewModel()) 
 
 //                Loading image area when there is no image loaded
                 LoadingImageAreaState.INACTIVE -> {
+                    val loadImageLauncher: ManagedActivityResultLauncher<String, Uri?> =
+                        rememberLauncherForActivityResult(
+                            contract = ActivityResultContracts.GetContent(),
+                            onResult = { imageUri: Uri? ->
+                                analyzeImage(
+                                    context = context,
+                                    imageUri = imageUri,
+                                    onQrCodeDetected = { newResult ->
+                                        decodeImageViewModel.loadImage(newImage = imageUri)
+                                        decodeImageViewModel.updateQrCodeResult(newResult = newResult)
+                                    },
+                                    onDetectFailed = {
+                                        decodeImageViewModel.loadImage(newImage = imageUri)
+                                        decodeImageViewModel.updateQrCodeResult(newResult = "")
+                                        makeNotification(
+                                            context = context,
+                                            title = DETECT_QR_FAILED_NOTIFICATION_TITLE,
+                                            body = DETECT_QR_FAILED_NOTIFICATION_BODY,
+                                            id = DETECT_QR_FAILED_NOTIFICATION_ID
+                                        )
+                                    }
+                                )
+                            }
+                        )
+
                     Image(
                         painter = painterResource(R.drawable.image_view_place_holder),
                         contentDescription = "image view place holder",
