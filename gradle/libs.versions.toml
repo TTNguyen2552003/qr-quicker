@@ -16,6 +16,7 @@ navVersion = "2.8.1"
 zxingCoreVersion = "3.5.3"
 workVersion = "2.9.1"
 splashscreenVersion = "1.0.1"
+dotlottieVersion = "0.5.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -44,6 +45,7 @@ androidx-navigation-compose = { group = "androidx.navigation", name = "navigatio
 google-zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxingCoreVersion" }
 androidx-work-runtime = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workVersion" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreenVersion" }
+dotlottie-android = { group = "com.github.LottieFiles", name = "dotlottie-android", version.ref = "dotlottieVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

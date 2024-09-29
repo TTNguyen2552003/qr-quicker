@@ -64,6 +64,8 @@ import app.kotlin.qrquicker.ui.styles.surfaceColor
 import app.kotlin.qrquicker.ui.viewmodels.ScanQrUiState
 import app.kotlin.qrquicker.ui.viewmodels.ScanQrViewModel
 import app.kotlin.qrquicker.ui.viewmodels.ScanningAreaState
+import com.lottiefiles.dotlottie.core.compose.ui.DotLottieAnimation
+import com.lottiefiles.dotlottie.core.util.DotLottieSource
 import kotlinx.coroutines.launch
 
 @Composable
@@ -184,12 +186,24 @@ fun ScanQrScreen(scanQrViewModel: ScanQrViewModel = viewModel()) {
 
 //                Scanning area when scanner is inactive
                 ScanningAreaState.INACTIVE -> {
-                    Image(
-                        painter = painterResource(R.drawable.scanning_view_place_holder),
-                        contentDescription = "camera view place holder",
+                    Box(
                         modifier = Modifier.size(size = 200.dp),
-                        colorFilter = ColorFilter.tint(color = onSurfaceColor)
-                    )
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(R.drawable.scanning_view_place_holder),
+                            contentDescription = "camera view place holder",
+                            modifier = Modifier.size(size = 200.dp),
+                            colorFilter = ColorFilter.tint(color = onSurfaceColor)
+                        )
+
+                        DotLottieAnimation(
+                            modifier = Modifier.size(size = 160.dp),
+                            autoplay = true,
+                            loop = true,
+                            source = DotLottieSource.Asset(assetPath = "animated_scan_line.lottie")
+                        )
+                    }
 
                     Button(
                         label = R.string.scan_qr_screen_start_scanning_button_label,

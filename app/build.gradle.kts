@@ -51,6 +51,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.dotlottie.android)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.work.runtime)
     implementation(libs.google.zxing.core)
