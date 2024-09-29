@@ -120,25 +120,33 @@ fun DecodeImageScreen(decodeImageViewModel: DecodeImageViewModel = viewModel()) 
 
 //        Request read media images permission if not granted
         if (decodeImageUiState.loadingImageAreaState == LoadingImageAreaState.NO_PHOTOS_AND_MEDIA_PERMISSION_ALLOWED) {
-            val permissionLauncher = rememberLauncherForActivityResult(
-                contract = ActivityResultContracts.RequestPermission()
-            ) { isGranted ->
-//                Update the state in ViewModel
-                val newLoadingImageAreaState: LoadingImageAreaState =
-                    if (isGranted) {
-                        LoadingImageAreaState.INACTIVE
-                    } else {
-                        LoadingImageAreaState.NO_PHOTOS_AND_MEDIA_PERMISSION_ALLOWED
-                    }
+            val multiplePermissionsLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestMultiplePermissions()
+            ) { permissions ->
+                val allGranted = permissions.values.all { it }
+                val newLoadingImageAreaState = if (allGranted) {
+                    LoadingImageAreaState.INACTIVE
+                } else {
+                    LoadingImageAreaState.NO_PHOTOS_AND_MEDIA_PERMISSION_ALLOWED
+                }
                 decodeImageViewModel.updateLoadingImageAreaState(newState = newLoadingImageAreaState)
             }
 
-            LaunchedEffect(key1 = Unit) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    permissionLauncher.launch(READ_MEDIA_IMAGES)
-                } else {
-                    permissionLauncher.launch(READ_EXTERNAL_STORAGE)
+            LaunchedEffect(decodeImageUiState.loadingImageAreaState) {
+                val permissionsToRequest = when {
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> {
+                        arrayOf(READ_MEDIA_IMAGES, READ_MEDIA_VISUAL_USER_SELECTED)
+                    }
+
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
+                        arrayOf(READ_MEDIA_IMAGES)
+                    }
+
+                    else -> {
+                        arrayOf(READ_EXTERNAL_STORAGE)
+                    }
                 }
+                multiplePermissionsLauncher.launch(permissionsToRequest)
             }
         }
 
@@ -165,14 +173,15 @@ fun DecodeImageScreen(decodeImageViewModel: DecodeImageViewModel = viewModel()) 
             rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.GetContent(),
                 onResult = { imageUri: Uri? ->
-                    decodeImageViewModel.loadImage(newImage = imageUri)
                     analyzeImage(
                         context = context,
                         imageUri = imageUri,
                         onQrCodeDetected = { newResult ->
+                            decodeImageViewModel.loadImage(newImage = imageUri)
                             decodeImageViewModel.updateQrCodeResult(newResult = newResult)
                         },
                         onDetectFailed = {
+                            decodeImageViewModel.loadImage(newImage = imageUri)
                             decodeImageViewModel.updateQrCodeResult(newResult = "")
                             makeNotification(
                                 context = context,
